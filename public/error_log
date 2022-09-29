@@ -1,0 +1,5 @@
+[04-Aug-2022 07:48:46 UTC] PHP Fatal error:  Cannot use DB as DB because the name is already in use in /home/eb31ibz30one/public_html/trustprint/app/DatabaseController.php on line 7
+[11-Aug-2022 05:59:39 UTC] PHP Fatal error:  Cannot use isset() on the result of an expression (you can use "null !== expression" instead) in /home/eb31ibz30one/public_html/trustprint/app/Http/Controllers/DashboardController.php on line 33
+[07-Sep-2022 11:22:46 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/eb31ibz30one/public_html/trustprint/app/Http/Controllers/DashboardController.php on line 3
+[07-Sep-2022 11:24:58 UTC] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/eb31ibz30one/public_html/trustprint/app/Http/Controllers/DashboardController.php on line 3
+[07-Sep-2022 11:59:05 UTC] PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 65015808 bytes) in /home/eb31ibz30one/public_html/trustprint/app/Http/Controllers/DashboardController.php on line 327

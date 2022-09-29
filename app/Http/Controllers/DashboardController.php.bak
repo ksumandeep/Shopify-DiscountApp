@@ -1,0 +1,668 @@
+<?php
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\TrustmeupAPI;
+use App\DatabaseController;
+
+use Shopify\Clients\Graphql;
+
+use DB;
+use Session;
+use Illuminate\Support\Facades\Log;
+
+class DashboardController extends Controller
+{
+    public $appApiUrl;
+	public $appUrls;
+	public $getApiProducts;
+	public $trustmeupAPI;
+	public $dbModal;
+	public $appToken;
+	
+	public function __construct(){
+		$this->appApiUrl 		= "https://trustprint.trustmeup.info/api/";
+		$this->getApiProducts	= "https://trustprint.trustmeup.info/getProducts/";	
+		$this->appUrls 			= "https://trustprint.trustmeup.info/";
+		$this->trustmeupAPI		= new TrustmeupAPI();
+		$this->dbModal			= new DatabaseController();
+		
+		$this->app_token 		= "1234567890";
+	}
+    
+	public function checkWebhook(){
+		Log::info('WebHookTriggered!!');
+	}
+	
+	public function graphQLfns($token, $shop, $query = array()){
+
+		$url = "https://". $shop ."/admin/api/2022-07/graphql.json";
+		
+		//$url = "https://". $shop ."/admin/api/2022-07/checkouts/17176e113099faf278633ef0789898ae.json";
+		$curl = curl_init($url);
+		curl_setopt($curl, CURLOPT_HEADER, true);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($curl, CURLOPT_MAXREDIRS, 3);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+		
+		$request_header[] = "";
+		$request_header[] = "Content-Type: application/json";
+		if(!is_null($token)) $request_header[] = "X-Shopify-Access-Token: ". $token;
+		curl_setopt($curl, CURLOPT_HTTPHEADER, $request_header);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($query));
+		curl_setopt($curl, CURLOPT_POST, true);
+		
+		$response = curl_exec($curl);
+		$error_number = curl_errno($curl);
+		$error_message = curl_error($curl);
+		curl_close($curl);
+		if($error_number){
+			dd($error_message);
+		}else{
+			echo "<pre>";
+			dd($response);
+			
+			$response = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
+			
+			/*$header = array();
+			$header_data = explode("\n", $response[0]);
+			$headers['status'] = $header_data[0];
+			array_shift($header_data);
+			foreach($header_data as $item){
+				$val = explode(":", $item);
+				$headers[trim($val[0])] = trim($val[1]);
+			}*/
+			
+			dd($response[1]);
+		}
+	}
+
+    public function dashboard()
+    {	
+		
+        $apiUrl 			= $this->appApiUrl;
+        $appUrl 			= $this->appUrls;
+		
+        //$shop_name 	= $_REQUEST['shop'];
+		
+        // Products from Trustmeup API
+        $productList		= $this->trustmeupAPI->getProducts();
+        $productData 		= $productList->results;
+        $count 				= $productList->count;
+        $app_token 			= "1234567890";
+		
+        $storeInfo 			= $this->dbModal->validateApiCall($app_token);
+		$storeName			= $storeInfo[0]->name;
+		
+		$assignedProduct 	= $this->dbModal->getCurrentAssignedProducts($storeName);
+		
+		$tempData 			= array(); 
+		
+        for($i=0;$i<count($assignedProduct);$i++){
+			if(!isset($tempData[$assignedProduct[$i]->trustmeup_id])){
+				$tempData[$assignedProduct[$i]->trustmeup_id] = [];
+			}
+			if( (int)$assignedProduct[$i]->active == 1){
+				array_push($tempData[$assignedProduct[$i]->trustmeup_id], $assignedProduct[$i]);
+			}
+		}
+		
+		for($i=0;$i<count($productData);$i++){
+			if (array_key_exists($productData[$i]->id,$tempData)){
+				if(count($tempData[$productData[$i]->id]) > 0){
+					$productData[$i]->active = "1";
+				}else{
+					$productData[$i]->active = "0";
+				}
+			}
+		}
+		
+        //return view('dashboard', compact(['productData', 'count', 'shop_name', 'apiUrl', 'appUrl','app_token' ]) );
+		return view('dashboard', compact(['productData', 'count', 'apiUrl', 'appUrl','app_token' ]) );
+    }
+
+    public function shopifyProducts(Request $request)
+    {        
+        $token 			= $_REQUEST['token'];		
+        $storeInfo 		= $this->dbModal->validateApiCall($token);     
+		$storeName		= $storeInfo[0]->name;
+		
+        $apiProductUrl 	= $this->getApiProducts;
+        $appUrl 		= $this->appUrls;
+
+        $data 			= file_get_contents($apiProductUrl. "?token=" . $token . "&action=getProducts");
+		
+		$product_get 	= $this->dbModal->getStoreProductList($storeName, 1);
+				
+        $productList 	= (array) $product_get;
+        $json['value'] 	= json_decode($data, true);
+		foreach($json['value'] as $value){
+			foreach($value as $key => $items){
+				$products 	= $this->dbModal->getAssignedStoreProducts($storeName, $_REQUEST['id'], $items['id']);
+				if($products > 0){
+					$json['value']['products'][$key]['active'] 		= 1;
+					$json['value']['products'][$key]['trustMeId'] 	= $_REQUEST['id'];
+				}else{
+					$json['value']['products'][$key]['active'] 		= 0;
+					$json['value']['products'][$key]['trustMeId'] 	= $_REQUEST['id'];
+				}
+			}
+		}
+        $json['product_get'] 	= $productList;
+		$json['discountName'] 	= $_REQUEST['discountName'];
+		$json['discountCode'] 	= $_REQUEST['discountCode'];
+		$json['discountValue']	= $_REQUEST['discountVal'];
+		//dd($json);
+        return view('popup',$json);
+    }
+	
+	/*
+     * Check Active Discount
+     */
+	public function checkActiveDiscount(Request $request){
+		$token 			= $_REQUEST['token'];		
+        $storeInfo 		= $this->dbModal->validateApiCall($token);     
+		$storeName		= $storeInfo[0]->name;
+		
+		$trustmeupId 	= $request['trustMeId'];
+		$sql			= $this->dbModal->getCurrentStoreProducts($storeName, $trustmeupId);
+		if(empty($sql)){
+			echo json_encode(array('status' => 200, 'message' => 'OK'));
+		}else{
+			echo json_encode(array('status' => 404, 'message' => 'EMPTY'));
+		}
+	}
+    /*
+     * Connect Trustmeup product with Shopify
+     */
+    public function assignProduct(Request $request) {
+		
+//Cart-page Get-Response
+
+ 
+        if($request['tokenn']){		
+		
+		 $users = DB::table('users')->select('*')->get();
+
+        //print_r($users);
+		//echo "=========================================";
+$query=array("query"=>'
+			mutation{
+  discountAutomaticBasicCreate(automaticBasicDiscount: {
+      title: "trustme_GeneralStoreDiscount_10_00"
+      startsAt: "2017-04-18T02:38:45Z"
+      endsAt: "2018-04-18T02:38:45Z",
+      customerGets: {
+        value: {
+         #Accepts percentage, discount amount, discount on quantity
+         percentage: 0.10
+          }
+        items: {
+          products: {
+            productsToAdd: ["gid://shopify/Product/7828708950268"]
+          }
+        }
+      }
+      minimumRequirement: {
+        #Accepts quantity, or subtotal
+        quantity: {
+          greaterThanOrEqualToQuantity: "1"
+        }
+      }
+  })
+  {
+    userErrors { field message code }
+    automaticDiscountNode {
+        automaticDiscount {
+        ... on DiscountAutomaticBasic {
+          title
+          shortSummary
+          summary
+          minimumRequirement {
+            ... on DiscountMinimumQuantity { quantity: greaterThanOrEqualToQuantity }
+            ... on DiscountMinimumSubtotal { subtotal: greaterThanOrEqualToSubtotal { amount currencyCode }}
+          }
+        }
+      }
+    }
+  }
+}
+');
+     $token ="shpua_98331647c5ba499b6ce4eef757f60931";
+	 $shop = "discount-custom-app-test.myshopify.com";
+	 $version = "2022-07"; 
+	 $url='https://'.$shop. '/admin/api/'.$version.'/graphql.json';;
+		$curl=curl_init($url);
+		curl_setopt($curl,CURLOPT_HEADER,true);
+		curl_setopt($curl,CURLOPT_RETURNTRANSFER,true);
+		curl_setopt($curl,CURLOPT_FOLLOWLOCATION,true);
+		curl_setopt($curl,CURLOPT_MAXREDIRS,10);
+		$headers[]="";
+		$headers[]="Content-Type: application/json";
+		if(!is_null($token)){
+			$headers[]="X-Shopify-Access-Token: ".$token;
+			curl_setopt($curl,CURLOPT_HTTPHEADER,$headers);
+		}
+		curl_setopt($curl,CURLOPT_POSTFIELDS,json_encode($query));
+		curl_setopt($curl,CURLOPT_POST,true);
+		$response= curl_exec($curl);
+		$error=curl_errno($curl);
+		$error_msg=curl_error($curl);
+		curl_close($curl);
+		
+		if($error){
+			return $error_msg;
+		}else{
+			$response=preg_split("/\r\n\r\n|\n\n|\r\r/",$response,2);
+			print_r(json_decode($response[1]));
+			$headers=array();
+			$headers_content=explode("\n",$response[0]);
+			$headers['status']=$headers_content[0];
+			array_shift($headers_content);
+			foreach($headers_content as $content){
+				$data=explode(':',$content);
+				$headers[trim($data[0])]=trim($data[1]);
+			}
+			
+			return array('headers'=>$headers,'body'=>$response[1]);
+		}
+	 
+	
+
+	echo json_encode(array('status' => 200, 'message' => 'You have successfully to find this file'));
+	}
+	else{
+        $token 					= $_REQUEST['token'];		
+        $storeInfo 				= $this->dbModal->validateApiCall($token);     
+		$storeName				= $storeInfo[0]->name;
+        $shopifyId 				= $request['shopifyId'];
+        $trustmeupId 			= $request['trustMeId'];
+		
+		$products 	= $this->dbModal->getAssignedStoreProducts1($storeName, $trustmeupId, $shopifyId);
+	
+		if($products <= 0){
+			$checkIfExist	= $this->dbModal->checkIfExist($storeName, $trustmeupId, $_REQUEST['discountCode']);	
+			
+			if(empty($checkIfExist)){
+				
+				$discountStartDate 		= date('Y-m-d',strtotime("-1 days"));			
+				$prdctId				= $shopifyId.',';
+				
+				$productIds				= array($shopifyId);
+				
+				/* Add and Create Price Rule */
+				$query 					= '{
+												"price_rule":
+												{
+													"title":"'.$_REQUEST['discountCode'].'",
+													"target_type":"line_item",
+													"target_selection":"entitled",
+													"allocation_method":"across",
+													"value_type":"percentage",
+													"value":"-10.0",
+													"customer_selection":"all",
+													"entitled_product_ids": ['.implode($productIds).'],
+													"starts_at":"'.$discountStartDate.'T17:59:10Z"
+												}
+											}';
+				$url 					= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules.json";
+				$priceRuleId 			= $this->discounCodeApi($query, $url, 'POST', 1);
+				
+				/* Add Discount Code to Price Rule */
+				$addDiscountCodeQuery 	= '{
+												"discount_code":
+												{
+													"code":"'.$_REQUEST['discountCode'].'"
+												}
+											}';
+				$addDiscountCodeUrl 	= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules/".$priceRuleId."/discount_codes.json";
+				$this->discounCodeApi($addDiscountCodeQuery, $addDiscountCodeUrl, 'POST', 0);
+				
+				$this->dbModal->discountTableQ($storeName, $trustmeupId, $priceRuleId, $_REQUEST['discountCode'], $productIds);
+				
+			}elseif($checkIfExist[0]->active == 0){
+				
+				$discountStartDate 		= date('Y-m-d',strtotime("-1 days"));			
+				$prdctId				= $shopifyId.',';
+				
+				$productIds				= array($shopifyId);
+				
+				/* Add and Create Price Rule */
+				$query 					= '{
+												"price_rule":
+												{
+													"title":"'.$_REQUEST['discountCode'].'",
+													"target_type":"line_item",
+													"target_selection":"entitled",
+													"allocation_method":"across",
+													"value_type":"percentage",
+													"value":"-10.0",
+													"customer_selection":"all",
+													"entitled_product_ids": ['.implode($productIds).'],
+													"starts_at":"'.$discountStartDate.'T17:59:10Z"
+												}
+											}';
+				$url 					= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules.json";
+				$priceRuleId 			= $this->discounCodeApi($query, $url, 'POST', 1);
+				
+				/* Add Discount Code to Price Rule */
+				$addDiscountCodeQuery 	= '{
+												"discount_code":
+												{
+													"code":"'.$_REQUEST['discountCode'].'"
+												}
+											}';
+				$addDiscountCodeUrl 	= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules/".$priceRuleId."/discount_codes.json";
+				$this->discounCodeApi($addDiscountCodeQuery, $addDiscountCodeUrl, 'POST', 0);
+				
+				$this->dbModal->updateProductsDiscountTable($storeName, $trustmeupId, $shopifyId, $priceRuleId, 1);
+				
+			}else{
+				
+				$getValue			= $this->dbModal->getPriceRuleId($storeName, $trustmeupId);
+				$shopifyIds 		= explode(",",$getValue[0]->product_Id);
+				array_pop($shopifyIds);
+				array_push($shopifyIds,$shopifyId);
+				
+				
+				$updatedProducts	= implode(',',$shopifyIds);
+				
+				$priceRuleId 		= $getValue[0]->price_rule_Id;
+				$query 					= '{
+											"price_rule":
+												{
+													"entitled_product_ids": [
+														'.$updatedProducts.'
+													]
+												}
+										}';
+				$url 					= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules/".$priceRuleId.".json";
+
+				$this->discounCodeApi($query, $url, 'PUT', 0);
+				
+				$this->dbModal->updateProductsDiscountTable($storeName, $trustmeupId, $updatedProducts, $priceRuleId, 1);
+				
+			}
+		}else{
+			
+			$getValue			= $this->dbModal->getPriceRuleId($storeName, $trustmeupId);
+			$shopifyIds 		= explode(",",$getValue[0]->product_Id);
+			array_pop($shopifyIds);
+			if(!in_array($shopifyId,$shopifyIds)){
+				array_push($shopifyIds,$shopifyId);
+			}	
+			$updatedProducts	= implode(',',$shopifyIds);
+				
+			$priceRuleId 		= $getValue[0]->price_rule_Id;
+			$query 					= '{
+											"price_rule":
+												{
+													"entitled_product_ids": [
+														'.$updatedProducts.'
+													]
+												}
+										}';
+			$url 					= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules/".$priceRuleId.".json";
+			
+			$this->discounCodeApi($query, $url, 'PUT', 0);
+			
+			$this->dbModal->updateProductsDiscountTable($storeName, $trustmeupId, $updatedProducts, $priceRuleId, 1);
+				
+		}		
+		
+        $this->dbModal->assignProduct($shopifyId, $trustmeupId, $storeName);
+        echo json_encode(array('status' => 200, 'message' => 'OK'));
+    }
+    }
+
+    /*
+     * Disable product
+     */
+    public function disableAllProduct(Request $request) {
+		
+        $token 			= $_REQUEST['token'];		
+        $storeInfo 		= $this->dbModal->validateApiCall($token);     
+		$storeName		= $storeInfo[0]->name;
+				
+        $trustmeupId = $request['trustMeId'];
+		
+		/* Delete discount */
+		$getValue			= $this->dbModal->getPriceRuleId($storeName, $trustmeupId);
+		$priceRuleId 		= $getValue[0]->price_rule_Id;
+		
+		$this->deleteDiscountApi($priceRuleId);
+		/* End Discount */
+		
+		$this->dbModal->updateProductStatus($storeName, $trustmeupId);
+		$this->dbModal->updateDiscountStatus($storeName, $trustmeupId);
+        echo json_encode(array('status' => 200, 'message' => 'OK'));
+    }
+	
+	public function disableSingleProduct(Request $request) {
+		
+		$token 			= $_REQUEST['token'];		
+        $storeInfo 		= $this->dbModal->validateApiCall($token);     
+		$storeName		= $storeInfo[0]->name;
+				
+		$trustmeupId 	= $request['trustMeId'];
+		$productId		= $request['productId'];
+
+		$getValue			= $this->dbModal->getPriceRuleId($storeName, $trustmeupId);
+		$shopifyIds 		= explode(",",$getValue[0]->product_Id);
+		array_pop($shopifyIds);
+		
+		if (($key = array_search($productId, $shopifyIds)) !== false) {
+			unset($shopifyIds[$key]);
+		}
+		
+		$updatedProducts	= implode(',',$shopifyIds);
+				
+		$priceRuleId 		= $getValue[0]->price_rule_Id;
+		$query 					= '{
+											"price_rule":
+												{
+													"entitled_product_ids": [
+														'.$updatedProducts.'
+													]
+												}
+										}';
+		$url 					= "https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2022-07/price_rules/".$priceRuleId.".json";
+			
+		$this->discounCodeApi($query, $url, 'PUT', 0);
+		
+		$this->dbModal->updateSingleProductStatus($storeName, $trustmeupId, $productId);
+		
+		$products 	= $this->dbModal->getAssignedStoreProducts1($storeName, $trustmeupId, $productId);
+		
+		if($products <= 0){
+			$active = 0;
+			$this->deleteDiscountApi($priceRuleId);
+		}else{
+			$active = 1;
+		}
+		
+		$this->dbModal->updateProductsDiscountTable($storeName, $trustmeupId, $updatedProducts, $priceRuleId, $active);
+		
+		//dd($shopifyIds);
+		
+		
+        echo json_encode(array('status' => 200, 'message' => 'OK'));
+	}
+
+    /*
+     * Settings page update values
+     */
+    public function updateSettings($params)
+    {
+        $mysql = new DatabaseController();
+        $mysql->updateAppSettings($this->shop, $params);
+    }
+
+    /*
+     * Get Shopify products
+     */
+	 
+    public function getShopifyProducts()
+    {
+        $mysql = new DatabaseController();
+        $credentials = $mysql->getTrustApiCredentials($this->shop);
+        $token = $credentials['token'];
+        // Run API call to get products
+        $url = "https://" . $this->shop . "/admin/api/2021-07/products.json?fields=id,title,images,created_at";
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $headers = array(
+            "Accept: application/json",
+            "X-Shopify-Access-Token: " . $token,
+        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        $products = curl_exec($curl);
+        curl_close($curl);
+        echo $products;
+    }
+
+
+    public function shopify_call($token, $shop, $api_endpoint, $query = array(), $method = 'GET', $request_headers = array())
+    {
+
+        // Build URL
+        $url = "https://" . $shop . $api_endpoint;
+        if (!is_null($query) && in_array($method, array('GET', 'DELETE'))) $url = $url . "?" . http_build_query($query);
+
+        // Configure cURL
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_HEADER, TRUE);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, TRUE);
+        curl_setopt($curl, CURLOPT_MAXREDIRS, 3);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, FALSE);
+        // curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 3);
+        // curl_setopt($curl, CURLOPT_SSLVERSION, 3);
+        curl_setopt($curl, CURLOPT_USERAGENT, 'My New Shopify App v.1');
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+        curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
+
+        // Setup headers
+        $request_headers[] = "";
+        if (!is_null($token)) $request_headers[] = "X-Shopify-Access-Token: " . $token;
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $request_headers);
+
+        if ($method != 'GET' && in_array($method, array('POST', 'PUT'))) {
+            if (is_array($query)) $query = http_build_query($query);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $query);
+        }
+
+        // Send request to Shopify and capture any errors
+        $response = curl_exec($curl);
+        $error_number = curl_errno($curl);
+        $error_message = curl_error($curl);
+
+        // Close cURL to be nice
+        curl_close($curl);
+
+        // Return an error is cURL has a problem
+        if ($error_number) {
+            return $error_message;
+        } else {
+
+            // No error, return Shopify's response by parsing out the body and the headers
+            $response = preg_split("/\r\n\r\n|\n\n|\r\r/", $response, 2);
+
+            // Convert headers into an array
+            $headers = array();
+            $header_data = explode("\n", $response[0]);
+            $headers['status'] = $header_data[0]; // Does not contain a key, have to explicitly set
+            array_shift($header_data); // Remove status, we've already set it above
+            foreach ($header_data as $part) {
+                $h = explode(":", $part);
+                $headers[trim($h[0])] = trim($h[1]);
+            }
+
+            // Return headers and Shopify's response
+            return array('headers' => $headers, 'response' => $response[1]);
+
+        }
+    }
+	
+	public function settingsIndex(){
+		$app_token			= $this->app_token;
+		$storeInfo 			= $this->dbModal->validateApiCall($app_token);
+		$storeName			= $storeInfo[0]->name;
+		
+		$getStoreDetails	= $this->dbModal->getTrustApiCredentials($storeName, $app_token);
+		return view('settings', compact(['getStoreDetails']));
+	}
+	
+	public function updateClientInfo(Request $request){
+		$app_token			= $this->app_token;
+		$storeInfo 			= $this->dbModal->validateApiCall($app_token);
+		$storeName			= $storeInfo[0]->name;
+		
+		$clientId 		= $request->apiClient;
+		$clientPassword = $request->apiPassword;
+		try {
+			$this->dbModal->updateAppSettings($storeName, $app_token, $clientId, $clientPassword);
+			$message = "Your Credentials are updated Successfully.";
+		} catch (\Illuminate\Database\QueryException $e) {
+			// something went wrong with the query
+			$message = "Sorry something wrong please try after some time.";
+		} catch (\Exception $e) {
+			// something else happened
+			$message = "Sorry something wrong please try after some time.";
+		}
+		Session::put("message",$message);
+		return $this->settingsIndex();
+	}
+	
+	public function discounCodeApi($query, $apiUrl, $type, $returnVal){
+		
+		$ch = curl_init();
+
+		curl_setopt($ch, CURLOPT_URL, $apiUrl);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		//curl_setopt($ch, CURLOPT_POST, 1);		
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "$type");
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+
+		$headers = array();
+		//$headers[] = 'X-Shopify-Access-Token: {access_token}';
+		$headers[] = 'Content-Type: application/json';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+		$result = curl_exec($ch);
+		if (curl_errno($ch)) {
+			echo 'Error:' . curl_error($ch);
+		}
+		curl_close($ch);
+		$json = json_decode($result);
+		
+		//dd($json);
+		
+		if($returnVal == 1){
+			return $json->price_rule->id;
+		}
+	}
+	
+	public function deleteDiscountApi($priceRuleId){
+		$ch = curl_init();
+
+		curl_setopt($ch, CURLOPT_URL, 'https://3b200a17a27e73f6f15daec8732533dc:shpua_98331647c5ba499b6ce4eef757f60931@discount-custom-app-test.myshopify.com/admin/api/2021-10/price_rules/'.$priceRuleId.'.json');
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+
+
+		$headers = array();
+		//$headers[] = 'X-Shopify-Access-Token: {access_token}';
+		$headers[] = 'Content-Type: application/json';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+		$result = curl_exec($ch);
+		if (curl_errno($ch)) {
+			echo 'Error:' . curl_error($ch);
+		}
+		curl_close($ch);
+	}
+}

@@ -1,0 +1,94 @@
+[07-Sep-2022 06:26:26 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/test.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/test.php on line 49
+[07-Sep-2022 06:29:10 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 06:32:44 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 06:49:11 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 06:52:47 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 06:58:42 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 07:00:20 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 07:00:47 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:49
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 49
+[07-Sep-2022 07:27:59 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:28:09 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:28:36 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:28:47 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:28:57 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:29:09 UTC] PHP Notice:  Undefined variable: version in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 54
+[07-Sep-2022 07:43:48 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:51
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 07:43:49 UTC] PHP Fatal error:  Uncaught Error: Using $this when not in object context in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:51
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 07:45:09 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 07:45:09 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 07:45:09 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 07:45:09 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 07:45:09 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
+[07-Sep-2022 08:01:40 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 08:01:40 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:01:40 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:01:40 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 08:01:40 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
+[07-Sep-2022 08:31:58 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 08:31:58 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:31:58 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:31:58 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 08:31:58 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
+[07-Sep-2022 08:55:00 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 08:55:00 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:00 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:00 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 08:55:00 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
+[07-Sep-2022 08:55:31 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 08:55:31 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:31 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:31 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 08:55:31 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
+[07-Sep-2022 08:55:33 UTC] PHP Warning:  mysqli::__construct(): (HY000/2005): Unknown MySQL server host '127.0.0.1:3306' (0) in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 51
+[07-Sep-2022 08:55:33 UTC] PHP Notice:  Undefined variable: shop in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:33 UTC] PHP Warning:  mysqli::query(): Couldn't fetch mysqli in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 55
+[07-Sep-2022 08:55:33 UTC] PHP Notice:  Trying to get property 'num_rows' of non-object in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 56
+[07-Sep-2022 08:55:33 UTC] PHP Fatal error:  Uncaught Error: Call to a member function fetch_assoc() on bool in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php:59
+Stack trace:
+#0 {main}
+  thrown in /home/eb31ibz30one/public_html/trustprint/shopifyProducts.php on line 59
